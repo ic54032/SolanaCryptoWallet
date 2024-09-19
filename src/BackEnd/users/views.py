@@ -1,8 +1,5 @@
-from django.http import JsonResponse
 from solders.keypair import Keypair
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -43,12 +40,47 @@ def signup(request):
     hash_pubkey = SHA512.new()
     hash_pubkey.update(keypair.pubkey().to_json().encode())
 
-    user = User.objects.create(
+    user = User(
         public_key=hash_pubkey.hexdigest(),
-        private_key=encrypted_key,
+        password=encrypted_key,
         username=username
     )
+    user.save()
 
     token = Token.objects.create(user=user)
 
     return Response({'message': 'User created successfully', 'token': token.key})
+
+
+@api_view(['POST'])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if not username or not password:
+        return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = get_object_or_404(User, username=username)
+    salt = user.password[:16]
+    iv = user.password[16:32]
+    cipher_text = user.password[32:]
+
+    kdf = PBKDF2(password, salt, 32, count=1000000)
+    cipher = AES.new(kdf, AES.MODE_GCM, nonce=iv)
+
+    try:
+        seed_phrase = cipher.decrypt(cipher_text).decode()
+    except:
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+
+    keypair = Keypair.from_seed_phrase_and_passphrase(seed_phrase, password)
+
+    hash_pubkey = SHA512.new()
+    hash_pubkey.update(keypair.pubkey().to_json().encode())
+
+    if hash_pubkey.hexdigest() != user.public_key:
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+
+    token = Token.objects.get(user=user)
+
+    return Response({'message': 'Login successful', 'token': token.key})
