@@ -1,12 +1,16 @@
-import './App.css';
-import './HomePage/Home';
+import "./App.css";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./HomePage/Home";
+import CryptoWalletAuth from "./Auth/CryptoWalletAuth";
 
 function App() {
   return (
-    <div className="App">
-    <Home />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<CryptoWalletAuth />} />
+        <Route path="/home" element={<Home />} />
+      </Routes>
+    </Router>
   );
 }
 
