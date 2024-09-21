@@ -1,0 +1,29 @@
+.custom-dialog .MuiDialog-paper {
+    font-family: Arial, sans-serif;
+    color: white;
+    padding: 20px;
+    background-color: black;
+}
+
+.custom-dialog .MuiDialogTitle-root {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.custom-dialog .MuiDialogContentText-root {
+    font-size: 16px;
+}
+
+.custom-dialog .MuiDialogActions-root {
+    justify-content: center;
+}
+
+.button-dialog{
+    color: white !important;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
