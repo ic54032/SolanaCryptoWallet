@@ -110,9 +110,9 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
                     </div>
                 </div>
                 <DialogActions className="mt-6 justify-center">
-                    <Button onClick={()=>airdropSolana(parseFloat(receiveAmount))} className="w-full">
+                    <button onClick={()=>airdropSolana(parseFloat(receiveAmount))} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
                         Buy SOL
-                    </Button>
+                    </button>
                 </DialogActions>
             </DialogContent>
         </Dialog>
