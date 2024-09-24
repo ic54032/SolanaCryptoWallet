@@ -99,7 +99,7 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
     <Dialog open={open} onClose={handleClose}>
       <DialogContent className="sm:max-w-[425px] bg-gray-900 text-white p-6">
         <DialogTitle className="text-xl font-semibold mb-6">
-          Buy crypto
+          Buy Solana
         </DialogTitle>
 
         <div className="space-y-4">
