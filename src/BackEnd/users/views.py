@@ -29,6 +29,7 @@ def encrypt_key(private_key_bytes, password):
 
 @api_view(['POST'])
 def signup(request):
+    print("signup", request.data)
     username = request.data.get('username')
     password = request.data.get('password')
     private_key = request.data.get('private_key')
@@ -60,6 +61,7 @@ def signup(request):
 
 @api_view(['POST'])
 def login(request):
+    print("login", request.data)
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -93,6 +95,7 @@ def login(request):
 
 @api_view(['POST'])
 def check_public_key(request):
+    print("check_public_key", request.data)
     public_key = request.data.get('public_key')
 
     hash_pubkey = SHA512.new()
@@ -109,6 +112,7 @@ def check_public_key(request):
 
 @api_view(['POST'])
 def recover(request):
+    print("recover", request.data)
     private_key = request.data.get('private_key')
     password = request.data.get('password')
 

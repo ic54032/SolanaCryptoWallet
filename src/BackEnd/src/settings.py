@@ -29,8 +29,7 @@ SECRET_KEY = 'django-insecure-*tsgo+rcgixo0e)m!ie_r9_qo(7r8z&2$jhyjkfic&8dzm!(c*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost:3000",
-                 "solanacryptowallet.onrender.com",
+ALLOWED_HOSTS = ["solanacryptowallet.onrender.com",
                  "solanacryptowallet-backend.onrender.com",
                  ]
 
@@ -50,6 +49,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,7 +57,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'src.urls'
