@@ -29,9 +29,9 @@ SECRET_KEY = 'django-insecure-*tsgo+rcgixo0e)m!ie_r9_qo(7r8z&2$jhyjkfic&8dzm!(c*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["http://localhost:3000",
-                 "https://solanacryptowallet.onrender.com",
-                 "https://solanacryptowallet-backend.onrender.com",
+ALLOWED_HOSTS = ["localhost:3000",
+                 "solanacryptowallet.onrender.com",
+                 "solanacryptowallet-backend.onrender.com",
                  ]
 
 # Application definition
