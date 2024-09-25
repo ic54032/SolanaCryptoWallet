@@ -96,12 +96,13 @@ const CryptoWalletAuth = () => {
       username: username,
       password: password,
     };
+    console.log(username);
 
     axios
       .post(API_URL + "login", data)
       .then((response) => {
         localStorage.setItem("token", response.data.token);
-        navigate("/home");
+        navigate("/home", { state: { username: username } });
       })
       .catch((error) => {
         if (error.status === 404) {
@@ -128,7 +129,7 @@ const CryptoWalletAuth = () => {
       .post(API_URL + "signup", data)
       .then((response) => {
         localStorage.setItem("token", response.data.token);
-        navigate("/home");
+        navigate("/home", { state: { username: username } });
       })
       .catch((error) => {
         if (error.response.data.error === "Username already exists") {
