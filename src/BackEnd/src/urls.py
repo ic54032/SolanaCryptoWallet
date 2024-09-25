@@ -1,4 +1,5 @@
-from django.urls import re_path, include, path
+from django.urls import re_path
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from users import views
 
@@ -8,3 +9,5 @@ urlpatterns = [
     re_path('check-public-key', views.check_public_key),
     re_path('recover', views.recover),
 ]
+
+urlpatterns += staticfiles_urlpatterns()
