@@ -31,6 +31,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["solanacryptowallet.onrender.com",
                  "solanacryptowallet-backend.onrender.com",
+                 "localhost",
                  ]
 
 # Application definition
