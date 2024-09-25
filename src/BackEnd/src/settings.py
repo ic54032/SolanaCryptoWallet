@@ -20,7 +20,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -30,8 +29,10 @@ SECRET_KEY = 'django-insecure-*tsgo+rcgixo0e)m!ie_r9_qo(7r8z&2$jhyjkfic&8dzm!(c*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["http://localhost:3000",
+                 "https://solanacryptowallet.onrender.com",
+                 "https://solanacryptowallet-backend.onrender.com",
+                 ]
 
 # Application definition
 
@@ -80,7 +81,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'src.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -93,7 +93,6 @@ WSGI_APPLICATION = 'src.wsgi.application'
 DATABASES = {
     'default': dj_database_url.parse(os.environ['DATABASE_URL'])
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -126,7 +125,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -140,4 +138,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://solanacryptowallet.onrender.com",
 ]
