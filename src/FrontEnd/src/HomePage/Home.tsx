@@ -1,31 +1,62 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import BuyDialog from "../BuyDialog/Buy";
 import SendDialog from "../SendDialog/Send";
 import { Keypair } from "@solana/web3.js";
 import axios from "axios";
 import API_URL from "../environment";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 
 const HomePage = () => {
   const [openBuy, setOpenBuy] = useState(false);
   const [openSend, setOpenSend] = useState(false);
+  const [username, setUsername] = useState("...");
+  const navigate = useNavigate(); // Correctly get the history object
 
   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   //treba getBalance
   // get assets and show them in the table
 
   const getUsername = () => {
-    const data = {
-      token: localStorage.getItem("token"),
-    };
+    const token = localStorage.getItem("token");
 
-    axios.post(API_URL + "get-user", data).then((response) => {
-      return response.data.user;
-    });
-    return "Error";
+    axios
+      .get(API_URL + "get-user", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Token " + token,
+        },
+      })
+      .then((response) => {
+        setUsername(response.data.username);
+      });
   };
 
-  const username = getUsername();
+  useEffect(() => {
+    getUsername();
+  });
+
+  const logout = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      await axios.post(
+        API_URL + "logout/",
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Token " + token,
+          },
+        },
+      );
+      localStorage.clear();
+      navigate("/");
+    } catch (error) {
+      console.log("Logout failed", error);
+    }
+  };
 
   const getPublicKey = () => {
     const secretKeyStr = localStorage.getItem("secretKey");
@@ -44,7 +75,7 @@ const HomePage = () => {
 
   const adaptPublicKey = () => {
     const publicKey = getPublicKey();
-    return `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`;
+    return `${publicKey.toString().slice(0, 5)}...${publicKey.toString().slice(-5)}`;
   };
 
   const copyToClipboard = async () => {
@@ -96,7 +127,12 @@ const HomePage = () => {
             Send
           </Link>
         </div>
-        <div className="max-w-l px-4">{username}</div>
+        <div className="flex items-center space-x-4">
+          <div className="max-w-l px-4">{username}</div>
+          <button onClick={logout} className="hover:text-gray-300">
+            <FontAwesomeIcon icon={faSignOutAlt} />
+          </button>
+        </div>
       </div>
       <div className="home-page bg-gray-900 text-yellow-500 min-h-screen px-20">
         <div className="main-content p-6">

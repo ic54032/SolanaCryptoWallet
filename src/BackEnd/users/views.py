@@ -1,7 +1,10 @@
 from base64 import b64decode
+
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from solders.keypair import Keypair
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -87,14 +90,25 @@ def login(request):
     if hash_pubkey.hexdigest() != user.public_key:
         return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
 
-    token = Token.objects.get(user=user)
+    token, created = Token.objects.get_or_create(user=user)
     return Response({'message': 'Login successful', 'token': token.key})
 
 @api_view(['POST'])
-def getUserByToken(request):
-    token = request.data.get('token')
-    user = Token.objects.get(key=token).user
-    return Response({'user': user.username})
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        request.user.auth_token.delete()
+        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+    except:
+        return Response({'error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_user(request):
+    return Response({'username': request.user.username})
 
 
 @api_view(['POST'])
