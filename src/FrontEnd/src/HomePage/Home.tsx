@@ -3,11 +3,29 @@ import { Link, useLocation } from "react-router-dom";
 import BuyDialog from "../BuyDialog/Buy";
 import SendDialog from "../SendDialog/Send";
 import { Keypair } from "@solana/web3.js";
+import axios from "axios";
+import API_URL from "../environment";
 
 const HomePage = () => {
   const [openBuy, setOpenBuy] = useState(false);
   const [openSend, setOpenSend] = useState(false);
-  const username = useLocation().state.username;
+
+  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  //treba getBalance
+  // get assets and show them in the table
+
+  const getUsername = () => {
+    const data = {
+      token: localStorage.getItem("token"),
+    };
+
+    axios.post(API_URL + "get-user", data).then((response) => {
+      return response.data.user;
+    });
+    return "Error";
+  };
+
+  const username = getUsername();
 
   const getPublicKey = () => {
     const secretKeyStr = localStorage.getItem("secretKey");
@@ -18,14 +36,23 @@ const HomePage = () => {
     try {
       const secretKey = Uint8Array.from(Buffer.from(secretKeyStr, "base64"));
       const keypair = Keypair.fromSecretKey(secretKey);
-      return `${keypair.publicKey.toString().slice(0, 4)}...${keypair.publicKey.toString().slice(-4)}`;
+      return keypair.publicKey.toString();
     } catch (error) {
       return "Failed to decode the secret key";
     }
   };
 
-  const shortenPublicKey = () => {
-    //const publicKey =
+  const adaptPublicKey = () => {
+    const publicKey = getPublicKey();
+    return `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`;
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(getPublicKey());
+    } catch (err) {
+      alert("Failed to copy text");
+    }
   };
 
   const handleClickOpenBuy = () => {
@@ -45,10 +72,10 @@ const HomePage = () => {
   };
 
   return (
-    <div className="text-white">
+    <div className="text-yellow-500">
       <div className="nav-bar flex justify-between items-center p-4 px-20 bg-gray-800 w-full">
         <Link to="/" className="logo text-2xl font-bold">
-          🧂PAG
+          PAG
         </Link>
         <div className="nav-links space-x-6">
           <Link to="/" className="hover:text-gray-300">
@@ -71,18 +98,25 @@ const HomePage = () => {
         </div>
         <div className="max-w-l px-4">{username}</div>
       </div>
-      <div className="home-page bg-gray-900 text-white min-h-screen px-20">
+      <div className="home-page bg-gray-900 text-yellow-500 min-h-screen px-20">
         <div className="main-content p-6">
-          <h3 className="text-xl mb-2">Balance</h3>
+          <h3 className="text-xl mb-1">Balance</h3>
           <div className="balance-holder flex items-baseline">
             <h1 className="text-4xl font-bold">$</h1>
             <h1 className="text-4xl font-bold">0.00</h1>
           </div>
           <div>
             <div className="text-right">
-              <div className="text-white">Main Wallet</div>
               <div className="text-gray-400 flex items-center">
-                {getPublicKey()}
+                <div className="py-2 flex">
+                  <p className="mr-2">{adaptPublicKey()}</p>
+                  <button
+                    onClick={copyToClipboard}
+                    className="text-yellow-500 hover:underline"
+                  >
+                    COPY
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -112,7 +146,7 @@ const HomePage = () => {
                       />
                       <div>
                         <p>Solana</p>
-                        <p className="text-sm text-gray-400">SOL</p>
+                        <p className="text-sm ">SOL</p>
                       </div>
                     </div>
                   </td>

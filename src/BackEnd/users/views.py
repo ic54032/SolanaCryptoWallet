@@ -90,6 +90,12 @@ def login(request):
     token = Token.objects.get(user=user)
     return Response({'message': 'Login successful', 'token': token.key})
 
+@api_view(['POST'])
+def getUserByToken(request):
+    token = request.data.get('token')
+    user = Token.objects.get(key=token).user
+    return Response({'user': user.username})
+
 
 @api_view(['POST'])
 def check_public_key(request):
