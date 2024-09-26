@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:sqlite:C:\SolanaCryptoWallet\src\BackEnd\db.sqlite3</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="SolanaCryptoWallet@localhost" uuid="20332311-5e02-420a-88a9-e19439bf277f">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/SolanaCryptoWallet</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
