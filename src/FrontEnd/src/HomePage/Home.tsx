@@ -13,11 +13,8 @@ const HomePage = () => {
   const [openBuy, setOpenBuy] = useState(false);
   const [openSend, setOpenSend] = useState(false);
   const [username, setUsername] = useState("...");
+  const [moneyBalance, setMoneyBalance] = useState(0);
   const navigate = useNavigate();
-
-  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //treba getBalance
-  // get assets and show them in the table
 
   const getUsername = () => {
     const token = localStorage.getItem("token");
@@ -76,6 +73,7 @@ const HomePage = () => {
   };
 
   const handleCloseBuy = () => {
+    window.location.reload();
     setOpenBuy(false);
   };
 
@@ -84,6 +82,7 @@ const HomePage = () => {
   };
 
   const handleCloseSend = () => {
+    window.location.reload();
     setOpenSend(false);
   };
 

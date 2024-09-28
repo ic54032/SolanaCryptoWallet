@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Connection } from "@solana/web3.js";
-import { getBalance, EXCHANGE_RATE } from "../cryptoUtils";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { getBalance, EXCHANGE_RATE, publicKey } from "../cryptoUtils";
 const AssetsDiv = () => {
   const [balance, setBalance] = useState<number | null>(null);
 
@@ -8,6 +8,11 @@ const AssetsDiv = () => {
     const fetchBalance = async () => {
       const balance = await getBalance();
       setBalance(balance);
+      const connection = new Connection("https://api.devnet.solana.com");
+      const filter = {
+        programId: new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+      };
+      console.log(await connection.getTokenAccountsByOwner(publicKey, filter));
     };
     fetchBalance();
   }, []);
@@ -38,8 +43,8 @@ const AssetsDiv = () => {
               <td>
                 <p>{EXCHANGE_RATE}</p>
               </td>
-              <td>€{EXCHANGE_RATE * (balance ?? 0)}</td>
-              <td>{balance}</td>
+              <td>€{(EXCHANGE_RATE * (balance ?? 0)).toFixed(3)}</td>
+              <td>{balance?.toFixed(5)}</td>
             </tr>
           </tbody>
         </table>

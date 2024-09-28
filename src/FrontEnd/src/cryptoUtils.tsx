@@ -5,6 +5,9 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
+  sendAndConfirmTransaction,
+  SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
 
 export const secretKey = Uint8Array.from(
@@ -45,14 +48,8 @@ const airdropIfRequired = async (
   connection: Connection,
   publicKey: PublicKey,
   airdropAmount: number,
-  minimumBalance: number,
 ) => {
-  const balance = await connection.getBalance(publicKey, "confirmed");
-  if (balance < minimumBalance) {
-    return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
-  }
-  console.log("Balance is sufficient. No airdrop required.");
-  return balance;
+  return requestAndConfirmAirdrop(connection, publicKey, airdropAmount);
 };
 
 export const EXCHANGE_RATE = 133.88;
@@ -63,10 +60,42 @@ export async function airdropSolana(amount: number) {
   const status = await airdropIfRequired(
     connection,
     publicKey,
-    amount,
-    0.0025 * LAMPORTS_PER_SOL,
+    amount * LAMPORTS_PER_SOL,
   ).catch((error) => {
     console.error("Error: ", error);
   });
   console.log("Airdrop status is: ", status);
 }
+
+export const sendSol = async (amount: number, recipient: string) => {
+  if (!recipient) {
+    throw new Error("Recipient address is required");
+  }
+
+  const senderKeypair = Keypair.fromSecretKey(secretKey);
+
+  const recieverPubkey = new PublicKey(recipient);
+  console.log(`senderKeypair: ${publicKey.toBase58()}`);
+
+  const connection = new Connection(
+    "https://api.devnet.solana.com",
+    "confirmed",
+  );
+
+  const transaction = new Transaction();
+
+  const sendSolInstruction = SystemProgram.transfer({
+    fromPubkey: publicKey,
+    toPubkey: recieverPubkey,
+    lamports: amount * LAMPORTS_PER_SOL,
+  });
+
+  transaction.add(sendSolInstruction);
+
+  const signature = sendAndConfirmTransaction(connection, transaction, [
+    senderKeypair,
+  ]);
+
+  console.log(`💸 Finished! Sent ${amount} to the address ${recieverPubkey}. `);
+  console.log(`Transaction signature is ${signature}!`);
+};

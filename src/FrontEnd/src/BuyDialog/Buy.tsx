@@ -4,6 +4,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { airdropSolana, EXCHANGE_RATE } from "../cryptoUtils";
+import { CheckCircleIcon } from "lucide-react";
 interface BuyDialogProps {
   open: boolean;
   handleClose: () => void;
@@ -12,6 +13,7 @@ interface BuyDialogProps {
 const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
   const [spendAmount, setSpendAmount] = useState(EXCHANGE_RATE.toString());
   const [receiveAmount, setReceiveAmount] = useState("1");
+  const [buySuccess, setBuySuccess] = useState<boolean>(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -20,6 +22,16 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
     }
     setReceiveAmount(value);
     setSpendAmount(((parseFloat(value) | 0) * EXCHANGE_RATE).toFixed(2));
+  };
+
+  const handleBuy = async () => {
+    try {
+      await airdropSolana(parseFloat(receiveAmount));
+      setBuySuccess(true);
+    } catch (error) {
+      console.error("Transaction failed: ", error);
+      setBuySuccess(false);
+    }
   };
 
   return (
@@ -66,12 +78,17 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
         </div>
         <DialogActions className="mt-6 justify-center">
           <button
-            onClick={() => airdropSolana(parseFloat(receiveAmount))}
+            onClick={handleBuy}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
           >
             Buy SOL
           </button>
         </DialogActions>
+        {buySuccess && (
+          <div className="flex justify-center mt-4">
+            <CheckCircleIcon style={{ color: "green" }} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
