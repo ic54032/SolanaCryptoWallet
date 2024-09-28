@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import BuyDialog from "../BuyDialog/Buy";
 import SendDialog from "../SendDialog/Send";
+import TransactionsDialog from "../TransactionsDialog/Transactions";
 import { Keypair } from "@solana/web3.js";
 import axios from "axios";
 import API_URL from "../environment";
@@ -11,6 +12,7 @@ import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 const HomePage = () => {
   const [openBuy, setOpenBuy] = useState(false);
   const [openSend, setOpenSend] = useState(false);
+  const [openTransactions, setOpenTransactions] = useState(false);
   const [username, setUsername] = useState("...");
   const navigate = useNavigate(); // Correctly get the history object
 
@@ -102,14 +104,26 @@ const HomePage = () => {
     setOpenSend(false);
   };
 
+  function handleClickOpenTransactions() {
+    setOpenTransactions(true);
+  }
+
+  function handleCloseTransactions() {
+    setOpenTransactions(false);
+  }
+
   return (
     <div className="text-yellow-500">
       <div className="nav-bar flex justify-between items-center p-4 px-20 bg-gray-800 w-full">
-        <Link to="/" className="logo text-2xl font-bold">
+        <Link to="/home" className="logo text-2xl font-bold">
           PAG
         </Link>
         <div className="nav-links space-x-6">
-          <Link to="/" className="hover:text-gray-300">
+          <Link
+            to="#"
+            onClick={handleClickOpenTransactions}
+            className="hover:text-gray-300"
+          >
             Transactions
           </Link>
           <Link
@@ -199,6 +213,10 @@ const HomePage = () => {
         </div>
         <BuyDialog open={openBuy} handleClose={handleCloseBuy} />
         <SendDialog open={openSend} handleClose={handleCloseSend} />
+        <TransactionsDialog
+          open={openTransactions}
+          handleClose={handleCloseTransactions}
+        />
       </div>
     </div>
   );

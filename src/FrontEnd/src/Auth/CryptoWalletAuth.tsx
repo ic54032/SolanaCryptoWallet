@@ -107,10 +107,8 @@ const CryptoWalletAuth = () => {
         localStorage.setItem("token", response.data.token);
         navigate("/home", { state: { username: username } });
       })
-      .catch((error) => {
-        if (error.status === 404) {
-          setShowUserNotFoundError(true);
-        }
+      .catch((_error) => {
+        setShowUserNotFoundError(true);
       });
   }
 
@@ -260,7 +258,9 @@ const CryptoWalletAuth = () => {
                 </div>
               </form>
               {showUserNotFoundError && (
-                <span className="text-red-700">User not found!</span>
+                <span className="text-red-700">
+                  Invalid username or password!
+                </span>
               )}
               <div className="mt-2 text-center">
                 <span
