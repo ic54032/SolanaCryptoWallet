@@ -10,6 +10,7 @@ import {
 } from "@solana/web3.js";
 import { Search, X } from "lucide-react";
 import { CardContent, IconButton, Input, Pagination } from "@mui/material";
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 interface TransactionsDialogProps {
   open: boolean;
@@ -51,6 +52,9 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    Transaction[]
+  >([]);
   const transactionsPerPage = 3;
 
   useEffect(() => {
@@ -60,8 +64,7 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     }
     const secretKey = Uint8Array.from(Buffer.from(secretKeyString, "base64"));
     const keypair = Keypair.fromSecretKey(secretKey);
-    console.log(keypair.publicKey.toString());
-    getTransactions(keypair.publicKey.toString()).then((r) => console.log(r));
+    getTransactions(keypair.publicKey.toString());
   }, []);
 
   async function mapTransaction(
@@ -93,11 +96,28 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
       return null;
     }
 
+    let senderKeyString = senderKey.toBase58();
+    let recipientKeyString = recipientKey.toBase58();
+
+    const secretKeyString = localStorage.getItem("secretKey");
+    if (!secretKeyString) {
+      throw new Error("SECRET_KEY is not defined");
+    }
+    const secretKey = Uint8Array.from(Buffer.from(secretKeyString, "base64"));
+    const keypair = Keypair.fromSecretKey(secretKey);
+    const publicKey = keypair.publicKey.toString();
+
+    if (senderKey.toBase58() === publicKey) {
+      senderKeyString = senderKeyString + " (You)";
+    } else if (recipientKey.toBase58() === publicKey) {
+      recipientKeyString = recipientKeyString + " (You)";
+    }
+
     const time = await connection.getBlockTime(transaction.slot);
 
     return {
-      sender: senderKey.toBase58(),
-      recipient: recipientKey.toBase58(),
+      sender: senderKeyString,
+      recipient: recipientKeyString,
       time: time ? new Date(time * 1000).toLocaleString() : "Unknown",
       value:
         (transaction.meta.preBalances[0] - transaction.meta.postBalances[0]) /
@@ -139,17 +159,11 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
       );
 
       setTransactions(filteredTransactions);
-      console.log(filteredTransactions);
+      setFilteredTransactions(filteredTransactions);
     } catch (error) {
-      console.error("Greška kod dohvaćanja transakcija:", error);
+      console.error("Error while getting transactions:", error);
     }
   };
-
-  const filteredTransactions = transactions.filter(
-    (transaction) =>
-      transaction.sender.includes(searchTerm) ||
-      transaction.recipient.includes(searchTerm),
-  );
 
   const pageCount = Math.ceil(
     filteredTransactions.length / transactionsPerPage,
@@ -159,6 +173,58 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     (page - 1) * transactionsPerPage,
     page * transactionsPerPage,
   );
+
+  function searchTransactions() {
+    if (!searchTerm) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+    setPage(1);
+    askGemini(transactions, searchTerm).then((response) =>
+      setFilteredTransactions(response),
+    );
+  }
+
+  async function askGemini(transactions: Transaction[], searchTerm: string) {
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const prompt =
+      "You are a smart search tool for solana transactions." +
+      " Your response must be numbers that represent transaction IDs," +
+      " for example if IDs that match the search are 1,3 and 4, your response should be '1,3,4'." +
+      " These are the transactions of current user: \n" +
+      transactions
+        .map(
+          (transaction, index) =>
+            "transaction ID: " +
+            index +
+            " " +
+            transaction.sender +
+            " sent " +
+            transaction.value +
+            " " +
+            transaction.token +
+            " to " +
+            transaction.recipient +
+            ". Date and time of transaction: " +
+            transaction.time,
+        )
+        .join("\n") +
+      ".\n\n" +
+      "This is the search term: " +
+      searchTerm;
+
+    const result = await model.generateContent(prompt);
+    console.log(result.response.text());
+
+    const response = result.response.text().trim().split(",");
+
+    return transactions.filter((_, index) =>
+      response.includes(index.toString()),
+    );
+  }
 
   return (
     <Dialog
@@ -189,6 +255,11 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
             type="text"
             value={searchTerm}
             placeholder="Search"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                searchTransactions();
+              }
+            }}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-gray-800 w-full rounded-lg"
             sx={{
