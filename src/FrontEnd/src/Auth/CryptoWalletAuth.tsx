@@ -92,9 +92,6 @@ const CryptoWalletAuth = () => {
   }
 
   function login() {
-    const keypair = keypairFromRecoveryPhrase(seedPhrase.join(" "));
-    const keypairString = Buffer.from(keypair.secretKey).toString("base64");
-    localStorage.setItem("secretKey", keypairString);
     const data = {
       username: username,
       password: password,
@@ -105,6 +102,7 @@ const CryptoWalletAuth = () => {
       .post(API_URL + "login", data)
       .then((response) => {
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("secretKey", response.data.private_key);
         navigate("/home", { state: { username: username } });
       })
       .catch((_error) => {

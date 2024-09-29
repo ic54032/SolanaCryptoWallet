@@ -8,8 +8,8 @@ import {
   PublicKey,
   VersionedTransactionResponse,
 } from "@solana/web3.js";
-import { Search } from "lucide-react";
-import { Card, CardContent, Input } from "@mui/material";
+import { Search, X } from "lucide-react";
+import { CardContent, IconButton, Input, Pagination } from "@mui/material";
 
 interface TransactionsDialogProps {
   open: boolean;
@@ -25,13 +25,13 @@ interface Transaction {
 }
 
 const TransactionCard = (transaction: Transaction) => (
-  <Card className="mb-4">
-    <CardContent className="p-4">
+  <div className="mb-4 w-full rounded-lg">
+    <CardContent className="p-4 bg-gray-800 text-white rounded-lg">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-semibold">From: {transaction.sender}</span>
+        <span className="font-semibold mr-20">From: {transaction.sender}</span>
         <span className="text-sm text-gray-500">{transaction.time}</span>
       </div>
-      <div className="mb-2">To: {transaction.recipient}</div>
+      <div className="mb-2 font-semibold">To: {transaction.recipient}</div>
       <div className="flex justify-between items-center">
         <span className="font-bold">
           {transaction.value} {transaction.token}
@@ -41,7 +41,7 @@ const TransactionCard = (transaction: Transaction) => (
         </span>
       </div>
     </CardContent>
-  </Card>
+  </div>
 );
 
 const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
@@ -50,6 +50,8 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
 }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const transactionsPerPage = 3;
 
   useEffect(() => {
     const secretKeyString = localStorage.getItem("secretKey");
@@ -143,35 +145,83 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     }
   };
 
+  const filteredTransactions = transactions.filter(
+    (transaction) =>
+      transaction.sender.includes(searchTerm) ||
+      transaction.recipient.includes(searchTerm),
+  );
+
+  const pageCount = Math.ceil(
+    filteredTransactions.length / transactionsPerPage,
+  );
+
+  const displayedTransactions = filteredTransactions.slice(
+    (page - 1) * transactionsPerPage,
+    page * transactionsPerPage,
+  );
+
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogContent className="w-full bg-gray-900 text-white p-6">
-        <DialogTitle className="text-xl font-semibold mb-6">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth={false}
+      fullWidth={true}
+      sx={{
+        "& .MuiDialog-paper": {
+          width: "80%",
+          height: "80%",
+          display: "flex",
+          flexDirection: "column",
+        },
+      }}
+    >
+      <DialogContent className="flex flex-col h-full bg-gray-900 text-white p-6">
+        <div className="absolute right-8">
+          <IconButton onClick={handleClose}>
+            <X className="text-white" size={24} />
+          </IconButton>
+        </div>
+        <DialogTitle className="text-xl font-semibold mb-6 pt-0">
           Transactions
         </DialogTitle>
-        <div className="relative mb-4 w-full">
+        <div className="relative mb-4 w-full pr-4">
           <Input
             type="text"
-            placeholder="Search transactions..."
             value={searchTerm}
+            placeholder="Search"
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-gray-800 text-white w-full"
+            className="pl-10 bg-gray-800 w-full rounded-lg"
+            sx={{
+              "&::placeholder": { color: "white" },
+              color: "white",
+            }}
           />
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-500"
             size={18}
           />
         </div>
-        <div className="max-h-[400px] overflow-y-auto">
-          {transactions
-            .filter(
-              (transaction) =>
-                transaction.sender.includes(searchTerm) ||
-                transaction.recipient.includes(searchTerm),
-            )
-            .map((transaction, index) => (
-              <TransactionCard key={index} {...transaction} />
-            ))}
+        <div className="flex-grow overflow-auto rounded-lg pr-4">
+          {displayedTransactions.map((transaction, index) => (
+            <TransactionCard key={index} {...transaction} />
+          ))}
+        </div>
+        <div className="mt-4 flex justify-center">
+          <Pagination
+            count={pageCount}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+            sx={{
+              "& .MuiPaginationItem-root": {
+                color: "white",
+              },
+              "& .MuiPaginationItem-page.Mui-selected": {
+                backgroundColor:
+                  "--tw-bg-opacity: 1;background-color: rgb(31 41 55 / var(--tw-bg-opacity))",
+              },
+            }}
+          />
         </div>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,4 @@
-from base64 import b64decode
+from base64 import b64decode, b64encode
 
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -91,7 +91,9 @@ def login(request):
         return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
 
     token, created = Token.objects.get_or_create(user=user)
-    return Response({'message': 'Login successful', 'token': token.key})
+    private_key_str = b64encode(private_key_bytes).decode()
+    return Response({'message': 'Login successful', 'token': token.key, 'private_key': private_key_str})
+
 
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
