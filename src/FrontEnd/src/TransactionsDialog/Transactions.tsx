@@ -2,30 +2,17 @@ import React, { useEffect, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  VersionedTransactionResponse,
-} from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { Search, X } from "lucide-react";
 import { CardContent, IconButton, Input, Pagination } from "@mui/material";
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { askGemini, TransactionDetails, mapTransaction } from "../cryptoUtils";
 
 interface TransactionsDialogProps {
   open: boolean;
   handleClose: () => void;
 }
 
-interface Transaction {
-  sender: string;
-  recipient: string;
-  time: string;
-  value: number;
-  token: string;
-}
-
-const TransactionCard = (transaction: Transaction) => (
+const TransactionCard = (transaction: TransactionDetails) => (
   <div className="mb-4 w-full rounded-lg">
     <CardContent className="p-4 bg-gray-800 text-white rounded-lg">
       <div className="flex justify-between items-center mb-2">
@@ -49,11 +36,11 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
   open,
   handleClose,
 }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<TransactionDetails[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [filteredTransactions, setFilteredTransactions] = useState<
-    Transaction[]
+    TransactionDetails[]
   >([]);
   const transactionsPerPage = 3;
 
@@ -67,65 +54,6 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     getTransactions(keypair.publicKey.toString());
   }, []);
 
-  async function mapTransaction(
-    transaction: VersionedTransactionResponse | null,
-    connection: Connection,
-  ) {
-    if (
-      !transaction ||
-      !transaction.transaction ||
-      !transaction.transaction.message ||
-      !transaction.meta ||
-      !transaction.meta.preBalances ||
-      !transaction.meta.postBalances ||
-      !transaction.transaction.message.getAccountKeys() ||
-      !transaction.transaction.message.getAccountKeys().get(0) ||
-      !transaction.transaction.message.getAccountKeys().get(1) ||
-      !transaction.slot
-    ) {
-      return null;
-    }
-    const accountKeys = transaction.transaction.message.getAccountKeys();
-    if (!accountKeys) {
-      return null;
-    }
-
-    const senderKey = accountKeys.get(0);
-    const recipientKey = accountKeys.get(1);
-    if (!senderKey || !recipientKey) {
-      return null;
-    }
-
-    let senderKeyString = senderKey.toBase58();
-    let recipientKeyString = recipientKey.toBase58();
-
-    const secretKeyString = localStorage.getItem("secretKey");
-    if (!secretKeyString) {
-      throw new Error("SECRET_KEY is not defined");
-    }
-    const secretKey = Uint8Array.from(Buffer.from(secretKeyString, "base64"));
-    const keypair = Keypair.fromSecretKey(secretKey);
-    const publicKey = keypair.publicKey.toString();
-
-    if (senderKey.toBase58() === publicKey) {
-      senderKeyString = senderKeyString + " (You)";
-    } else if (recipientKey.toBase58() === publicKey) {
-      recipientKeyString = recipientKeyString + " (You)";
-    }
-
-    const time = await connection.getBlockTime(transaction.slot);
-
-    return {
-      sender: senderKeyString,
-      recipient: recipientKeyString,
-      time: time ? new Date(time * 1000).toLocaleString() : "Unknown",
-      value:
-        (transaction.meta.preBalances[0] - transaction.meta.postBalances[0]) /
-        1e9,
-      token: "SOL",
-    };
-  }
-
   const getTransactions = async (walletAddress: string) => {
     try {
       const publicKey = new PublicKey(walletAddress);
@@ -134,9 +62,7 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
         "confirmed",
       );
 
-      const signatures = await connection.getSignaturesForAddress(publicKey, {
-        limit: 10,
-      });
+      const signatures = await connection.getSignaturesForAddress(publicKey);
 
       const transactions = await Promise.all(
         signatures.map(async (signatureInfo) => {
@@ -182,47 +108,6 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     setPage(1);
     askGemini(transactions, searchTerm).then((response) =>
       setFilteredTransactions(response),
-    );
-  }
-
-  async function askGemini(transactions: Transaction[], searchTerm: string) {
-    const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const prompt =
-      "You are a smart search tool for solana transactions." +
-      " Your response must be numbers that represent transaction IDs," +
-      " for example if IDs that match the search are 1,3 and 4, your response should be '1,3,4'." +
-      " These are the transactions of current user: \n" +
-      transactions
-        .map(
-          (transaction, index) =>
-            "transaction ID: " +
-            index +
-            " " +
-            transaction.sender +
-            " sent " +
-            transaction.value +
-            " " +
-            transaction.token +
-            " to " +
-            transaction.recipient +
-            ". Date and time of transaction: " +
-            transaction.time,
-        )
-        .join("\n") +
-      ".\n\n" +
-      "This is the search term: " +
-      searchTerm;
-
-    const result = await model.generateContent(prompt);
-    console.log(result.response.text());
-
-    const response = result.response.text().trim().split(",");
-
-    return transactions.filter((_, index) =>
-      response.includes(index.toString()),
     );
   }
 
