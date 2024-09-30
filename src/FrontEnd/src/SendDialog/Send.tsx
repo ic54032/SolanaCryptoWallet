@@ -93,7 +93,7 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
         <DialogActions className="mt-6 justify-center">
           <button
             onClick={handleSend}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded"
             disabled={parseFloat(amount) < 0.01}
           >
             Send SOL

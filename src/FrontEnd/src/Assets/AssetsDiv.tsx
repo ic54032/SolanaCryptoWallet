@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { getBalance, EXCHANGE_RATE, publicKey } from "../cryptoUtils";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { getBalance, EXCHANGE_RATE, getSecretKey } from "../cryptoUtils";
 const AssetsDiv = () => {
   const [balance, setBalance] = useState<number | null>(null);
-
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   useEffect(() => {
     const fetchBalance = async () => {
       const balance = await getBalance();

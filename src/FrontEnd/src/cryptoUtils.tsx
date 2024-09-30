@@ -12,12 +12,16 @@ import {
 } from "@solana/web3.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const secretKey = Uint8Array.from(
-  Buffer.from(localStorage.getItem("secretKey") || "", "base64"),
-);
-export const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
+export const getSecretKey = () => {
+  const secretKey = Uint8Array.from(
+    Buffer.from(localStorage.getItem("secretKey") || "", "base64"),
+  );
+  return secretKey;
+};
 
 export const getBalance = async () => {
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   const connection = new Connection(clusterApiUrl("devnet"));
   const balance = (await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL;
   console.log("Balance is: ", balance);
@@ -58,7 +62,8 @@ export const EXCHANGE_RATE = 133.88;
 
 export async function airdropSolana(amount: number) {
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   const status = await airdropIfRequired(
     connection,
     publicKey,
@@ -70,6 +75,8 @@ export async function airdropSolana(amount: number) {
 }
 
 export const sendSol = async (amount: number, recipient: string) => {
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   if (!recipient) {
     throw new Error("Recipient address is required");
   }

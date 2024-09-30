@@ -8,7 +8,9 @@ import axios from "axios";
 import API_URL from "../environment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-import { publicKey } from "../cryptoUtils";
+import { getSecretKey } from "../cryptoUtils";
+import TokenCreation from "../TokenCreation/TokenCreation";
+import { Keypair } from "@solana/web3.js";
 
 const HomePage = () => {
   const [openBuy, setOpenBuy] = useState(false);
@@ -17,6 +19,9 @@ const HomePage = () => {
   const [username, setUsername] = useState("...");
   const [moneyBalance, setMoneyBalance] = useState(0);
   const navigate = useNavigate();
+
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
 
   const getUsername = () => {
     const token = localStorage.getItem("token");
@@ -162,6 +167,7 @@ const HomePage = () => {
           open={openTransactions}
           handleClose={handleCloseTransactions}
         />
+        <TokenCreation />
       </div>
     </div>
   );
