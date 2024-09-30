@@ -92,9 +92,6 @@ const CryptoWalletAuth = () => {
   }
 
   function login() {
-    const keypair = keypairFromRecoveryPhrase(seedPhrase.join(" "));
-    const keypairString = Buffer.from(keypair.secretKey).toString("base64");
-    localStorage.setItem("secretKey", keypairString);
     const data = {
       username: username,
       password: password,
@@ -105,12 +102,11 @@ const CryptoWalletAuth = () => {
       .post(API_URL + "login", data)
       .then((response) => {
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("secretKey", response.data.private_key);
         navigate("/home", { state: { username: username } });
       })
-      .catch((error) => {
-        if (error.status === 404) {
-          setShowUserNotFoundError(true);
-        }
+      .catch((_error) => {
+        setShowUserNotFoundError(true);
       });
   }
 
@@ -260,7 +256,9 @@ const CryptoWalletAuth = () => {
                 </div>
               </form>
               {showUserNotFoundError && (
-                <span className="text-red-700">User not found!</span>
+                <span className="text-red-700">
+                  Invalid username or password!
+                </span>
               )}
               <div className="mt-2 text-center">
                 <span
