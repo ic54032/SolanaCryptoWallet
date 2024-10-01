@@ -22,7 +22,6 @@ import {
 import { getSecretKey } from "../cryptoUtils";
 import {
   createInitializeInstruction,
-  createUpdateFieldInstruction,
   pack,
   TokenMetadata,
 } from "@solana/spl-token-metadata";
@@ -113,15 +112,6 @@ export async function createAndMintToken(
     symbol: metaData.symbol,
     uri: metaData.uri,
   });
-
-  // Instruction to update metadata, adding custom field
-  // const updateFieldInstruction = createUpdateFieldInstruction({
-  //   programId: TOKEN_2022_PROGRAM_ID, // Token Extension Program as Metadata Program
-  //   metadata: mint, // Account address that holds the metadata
-  //   updateAuthority: keypair.publicKey, // Authority that can update the metadata
-  //   field: metaData.additionalMetadata[0][0], // key
-  //   value: metaData.additionalMetadata[0][1], // value
-  // });
 
   // Add instructions to new transaction
   const transaction = new Transaction().add(
