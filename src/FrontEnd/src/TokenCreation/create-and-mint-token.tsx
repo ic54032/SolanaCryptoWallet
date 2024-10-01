@@ -1,9 +1,7 @@
 import {
   createInitializeMetadataPointerInstruction,
   createInitializeMintInstruction,
-  createMint,
   ExtensionType,
-  getMint,
   getMintLen,
   getOrCreateAssociatedTokenAccount,
   LENGTH_SIZE,
@@ -117,13 +115,13 @@ export async function createAndMintToken(
   });
 
   // Instruction to update metadata, adding custom field
-  const updateFieldInstruction = createUpdateFieldInstruction({
-    programId: TOKEN_2022_PROGRAM_ID, // Token Extension Program as Metadata Program
-    metadata: mint, // Account address that holds the metadata
-    updateAuthority: keypair.publicKey, // Authority that can update the metadata
-    field: metaData.additionalMetadata[0][0], // key
-    value: metaData.additionalMetadata[0][1], // value
-  });
+  // const updateFieldInstruction = createUpdateFieldInstruction({
+  //   programId: TOKEN_2022_PROGRAM_ID, // Token Extension Program as Metadata Program
+  //   metadata: mint, // Account address that holds the metadata
+  //   updateAuthority: keypair.publicKey, // Authority that can update the metadata
+  //   field: metaData.additionalMetadata[0][0], // key
+  //   value: metaData.additionalMetadata[0][1], // value
+  // });
 
   // Add instructions to new transaction
   const transaction = new Transaction().add(
@@ -132,7 +130,7 @@ export async function createAndMintToken(
     // note: the above instructions are required before initializing the mint
     initializeMintInstruction,
     initializeMetadataInstruction,
-    updateFieldInstruction,
+    // updateFieldInstruction,
   );
 
   // Send transaction

@@ -11,13 +11,14 @@ import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { getSecretKey } from "../cryptoUtils";
 import TokenCreation from "../TokenCreation/TokenCreation";
 import { Keypair } from "@solana/web3.js";
+import SolanaTokenCreationForm from "../TokenCreation/TokenCreation";
 
 const HomePage = () => {
   const [openBuy, setOpenBuy] = useState(false);
   const [openSend, setOpenSend] = useState(false);
   const [openTransactions, setOpenTransactions] = useState(false);
+  const [openTokenCreation, setOpenTokenCreation] = useState(false);
   const [username, setUsername] = useState("...");
-  const [moneyBalance, setMoneyBalance] = useState(0);
   const navigate = useNavigate();
 
   const secretKey = getSecretKey();
@@ -101,6 +102,14 @@ const HomePage = () => {
     setOpenTransactions(false);
   }
 
+  function handleClickOpenTokenCreation() {
+    setOpenTokenCreation(true);
+  }
+
+  function handleCloseTokenCreation() {
+    setOpenTokenCreation(false);
+  }
+
   return (
     <div className="text-yellow-500">
       <div className="nav-bar flex justify-between items-center p-4 px-20 bg-gray-800 w-full">
@@ -128,6 +137,13 @@ const HomePage = () => {
             className="hover:text-gray-300"
           >
             Send
+          </Link>
+          <Link
+            to="#"
+            onClick={handleClickOpenTokenCreation}
+            className="hover:text-gray-300"
+          >
+            Create Token
           </Link>
         </div>
         <div className="flex items-center space-x-4">
@@ -167,7 +183,10 @@ const HomePage = () => {
           open={openTransactions}
           handleClose={handleCloseTransactions}
         />
-        <TokenCreation />
+        <SolanaTokenCreationForm
+          open={openTokenCreation}
+          handleClose={handleCloseTokenCreation}
+        />
       </div>
     </div>
   );

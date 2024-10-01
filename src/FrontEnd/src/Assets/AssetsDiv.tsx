@@ -1,21 +1,75 @@
 import React, { useEffect, useState } from "react";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Connection,
+  GetProgramAccountsFilter,
+  Keypair,
+  PublicKey,
+} from "@solana/web3.js";
 import { getBalance, EXCHANGE_RATE, getSecretKey } from "../cryptoUtils";
+import {
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getTokenMetadata,
+} from "@solana/spl-token";
+import Dialog from "@mui/material/Dialog";
+
+interface Metadata {
+  name: string;
+  symbol: string;
+  amount: number;
+}
 const AssetsDiv = () => {
   const [balance, setBalance] = useState<number | null>(null);
   const secretKey = getSecretKey();
   const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
+  const connection = new Connection("https://api.devnet.solana.com");
+  const [tokenList, setTokenList] = useState<Metadata[]>([]);
   useEffect(() => {
     const fetchBalance = async () => {
       const balance = await getBalance();
       setBalance(balance);
-      const connection = new Connection("https://api.devnet.solana.com");
-      const filter = {
-        programId: new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
-      };
-      console.log(await connection.getTokenAccountsByOwner(publicKey, filter));
+      // const filter = {
+      //   programId: new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+      // };
+      //console.log(await connection.getTokenAccountsByOwner(publicKey, filter));
+    };
+    const fetchTokens = async () => {
+      console.log("Fetching tokens...");
+      let response = await connection.getParsedTokenAccountsByOwner(publicKey, {
+        programId: TOKEN_2022_PROGRAM_ID,
+      });
+
+      response.value.forEach((accountInfo) => {
+        const mint = new PublicKey(
+          accountInfo.account.data["parsed"]["info"]["mint"],
+        );
+
+        getTokenMetadata(
+          connection,
+          mint, // Mint Account address
+        ).then((metadata) => {
+          console.log("\nMetadata:", JSON.stringify(metadata, null, 2));
+          setTokenList([
+            ...tokenList,
+            {
+              name: metadata!.name,
+              symbol: metadata!.symbol,
+              amount:
+                accountInfo.account.data["parsed"]["info"]["tokenAmount"][
+                  "amount"
+                ] /
+                10 **
+                  accountInfo.account.data["parsed"]["info"]["tokenAmount"][
+                    "decimals"
+                  ],
+            },
+          ]);
+        });
+        console.log(tokenList);
+      });
     };
     fetchBalance();
+    fetchTokens();
   }, []);
 
   return (

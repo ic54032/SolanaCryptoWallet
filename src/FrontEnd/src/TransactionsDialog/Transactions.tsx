@@ -51,7 +51,7 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     }
     const secretKey = Uint8Array.from(Buffer.from(secretKeyString, "base64"));
     const keypair = Keypair.fromSecretKey(secretKey);
-    getTransactions(keypair.publicKey.toString());
+    //getTransactions(keypair.publicKey.toString());
   }, []);
 
   const getTransactions = async (walletAddress: string) => {
