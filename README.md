@@ -1,4 +1,5 @@
 # Solana Crypto Wallet
+https://solanacryptowallet.onrender.com 
 
 A Solana-based cryptocurrency wallet built with Django and React, utilizing a PostgreSQL database managed via PgAdmin. This wallet enables users to create an account with a secure passphrase (secret key) and provides essential wallet functions such as buying and sending Solana (SOL), creating custom tokens, and searching through transaction histories with the help of Gemini AI.
 
@@ -40,8 +41,8 @@ Ensure you have the following installed:
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd <project-folder>
+   git clone https://github.com/ic54032/SolanaCryptoWallet.git
+   cd src/Backend
    ```
 
 2. Install Python dependencies:
