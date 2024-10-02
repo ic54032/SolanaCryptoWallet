@@ -64,6 +64,7 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
               <input
                 type="text"
                 value={spendAmount}
+                readOnly
                 className="bg-transparent text-xl font-semibold focus:outline-none"
               />
               <button className="bg-gray-700 text-sm px-3 py-1 rounded-full flex items-center">
