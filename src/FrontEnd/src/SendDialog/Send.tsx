@@ -4,7 +4,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { sendSol, getBalance } from "../cryptoUtils";
-import { CheckCircleIcon } from "lucide-react";
+import { CheckCircleIcon, Loader } from "lucide-react";
 interface SendDialogProps {
   open: boolean;
   handleClose: () => void;
@@ -15,6 +15,7 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
   const [recipient, setRecipient] = useState<string>("");
   const [balance, setBalance] = useState<number | null>(null);
   const [transactionSuccess, setTransactionSuccess] = useState<boolean>(false);
+  const [transactionLoading, setTransactionLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -38,11 +39,14 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
 
   const handleSend = async () => {
     try {
+      setTransactionLoading(true);
       await sendSol(parseFloat(amount), recipient);
+      setTransactionLoading(false);
       setTransactionSuccess(true);
     } catch (error) {
       console.error("Transaction failed: ", error);
       setTransactionSuccess(false);
+      setTransactionLoading(false);
     }
   };
   return (
@@ -102,6 +106,11 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
         {transactionSuccess && (
           <div className="flex justify-center mt-4">
             <CheckCircleIcon style={{ color: "green" }} />
+          </div>
+        )}
+        {transactionLoading && (
+          <div className="flex justify-center mt-4">
+            <Loader className="animate-spin text-gray-400" />
           </div>
         )}
       </DialogContent>

@@ -1,19 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { airdropSolana, EXCHANGE_RATE } from "../cryptoUtils";
-import { CheckCircleIcon } from "lucide-react";
+import { airdropSolana } from "../cryptoUtils";
+import { CheckCircleIcon, Loader } from "lucide-react";
+import axios from "axios";
 interface BuyDialogProps {
   open: boolean;
   handleClose: () => void;
 }
 
 const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
-  const [spendAmount, setSpendAmount] = useState(EXCHANGE_RATE.toString());
+  const [spendAmount, setSpendAmount] = useState("0");
   const [receiveAmount, setReceiveAmount] = useState("1");
   const [buySuccess, setBuySuccess] = useState<boolean>(false);
+  const [buyLoading, setBuyLoading] = useState<boolean>(false);
+  const [solPrice, setSolPrice] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const response = await axios.get(
+          "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+        );
+        setSolPrice(response.data.solana.usd);
+        setSpendAmount(response.data.solana.usd.toFixed(2));
+      } catch (error) {
+        console.error("Error fetching the Solana price:", error);
+      }
+    };
+    fetchPrice();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -21,16 +39,19 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
       return; // Exit if the value is not a whole number
     }
     setReceiveAmount(value);
-    setSpendAmount(((parseFloat(value) | 0) * EXCHANGE_RATE).toFixed(2));
+    setSpendAmount(((parseFloat(value) | 0) * solPrice).toFixed(2));
   };
 
   const handleBuy = async () => {
     try {
+      setBuyLoading(true);
       await airdropSolana(parseFloat(receiveAmount));
+      setBuyLoading(false);
       setBuySuccess(true);
     } catch (error) {
       console.error("Transaction failed: ", error);
       setBuySuccess(false);
+      setBuyLoading(false);
     }
   };
 
@@ -74,7 +95,7 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
           </div>
 
           <div className="text-sm text-gray-400 flex justify-center items-center">
-            <span>1 SOL = 133.88 EUR</span>
+            <span>1 SOL = {solPrice} EUR</span>
           </div>
         </div>
         <DialogActions className="mt-6 justify-center">
@@ -85,6 +106,11 @@ const BuyDialog: React.FC<BuyDialogProps> = ({ open, handleClose }) => {
             Buy SOL
           </button>
         </DialogActions>
+        {buyLoading && (
+          <div className="flex justify-center mt-4">
+            <Loader className="animate-spin text-gray-400" />
+          </div>
+        )}
         {buySuccess && (
           <div className="flex justify-center mt-4">
             <CheckCircleIcon style={{ color: "green" }} />

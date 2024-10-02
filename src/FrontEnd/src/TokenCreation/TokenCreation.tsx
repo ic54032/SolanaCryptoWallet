@@ -3,6 +3,7 @@ import { Input } from "@mui/material";
 import { createAndMintToken } from "./create-and-mint-token";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
+import { CheckCircleIcon, Loader } from "lucide-react";
 
 export interface TokenFormData {
   name: string;
@@ -24,6 +25,8 @@ const SolanaTokenCreationForm: React.FC<TokenDialogProps> = ({
     symbol: "",
     initialSupply: "",
   });
+  const [transactionSuccess, setTransactionSuccess] = useState<boolean>(false);
+  const [transactionLoading, setTransactionLoading] = useState<boolean>(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,10 +47,15 @@ const SolanaTokenCreationForm: React.FC<TokenDialogProps> = ({
 
   const handleCreateToken = async () => {
     try {
+      setTransactionLoading(true);
       const mint = await createAndMintToken(formData);
       console.log("Mint created: ", mint.toBase58());
+      setTransactionLoading(false);
+      setTransactionSuccess(true);
     } catch (error) {
       console.error("Minting failed: ", error);
+      setTransactionSuccess(false);
+      setTransactionLoading(false);
     }
   };
 
@@ -121,6 +129,16 @@ const SolanaTokenCreationForm: React.FC<TokenDialogProps> = ({
             Create Token
           </button>
         </form>
+        {transactionSuccess && (
+          <div className="flex justify-center mt-4">
+            <CheckCircleIcon style={{ color: "green" }} />
+          </div>
+        )}
+        {transactionLoading && (
+          <div className="flex justify-center mt-4">
+            <Loader className="animate-spin text-gray-400" />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

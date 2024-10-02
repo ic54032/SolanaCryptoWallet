@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { getBalance, EXCHANGE_RATE, getSecretKey } from "../cryptoUtils";
+import { EXCHANGE_RATE, getBalance, getSecretKey } from "../cryptoUtils";
 import { TOKEN_2022_PROGRAM_ID, getTokenMetadata } from "@solana/spl-token";
 import SendTokenDialog from "../SendTokenDialog/SendToken";
+import axios from "axios";
 
 export interface Metadata {
   name: string;
@@ -18,12 +19,25 @@ const AssetsDiv = () => {
   const [tokenList, setTokenList] = useState<Metadata[]>([]);
   const [openSendToken, setOpenSendToken] = useState(false);
   const [currentToken, setCurrentToken] = useState<Metadata | null>(null);
+  const [solPrice, setSolPrice] = useState(EXCHANGE_RATE);
 
   useEffect(() => {
     const fetchBalance = async () => {
       const balance = await getBalance();
       setBalance(balance);
     };
+
+    const fetchPrice = async () => {
+      try {
+        const response = await axios.get(
+          "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+        );
+        setSolPrice(response.data.solana.usd);
+      } catch (error) {
+        console.error("Error fetching the Solana price:", error);
+      }
+    };
+
     const fetchTokens = async () => {
       setTokenList([]);
       console.log("Fetching tokens...", tokenList);
@@ -59,6 +73,7 @@ const AssetsDiv = () => {
       });
     };
     fetchBalance();
+    fetchPrice();
     fetchTokens();
   }, []);
 
@@ -96,9 +111,9 @@ const AssetsDiv = () => {
                 </div>
               </td>
               <td>
-                <p>{EXCHANGE_RATE}</p>
+                <p>{solPrice}</p>
               </td>
-              <td>€{(EXCHANGE_RATE * (balance ?? 0)).toFixed(3)}</td>
+              <td>€{(solPrice * (balance ?? 0)).toFixed(3)}</td>
               <td>{balance?.toFixed(5)}</td>
             </tr>
             {tokenList.map((token, index) => (
