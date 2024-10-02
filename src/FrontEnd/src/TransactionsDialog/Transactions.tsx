@@ -51,8 +51,11 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
     }
     const secretKey = Uint8Array.from(Buffer.from(secretKeyString, "base64"));
     const keypair = Keypair.fromSecretKey(secretKey);
-    getTransactions(keypair.publicKey.toString());
-  }, []);
+    if (open) {
+      console.log("Getting transactions...");
+      getTransactions(keypair.publicKey.toString());
+    }
+  }, [open]);
 
   const getTransactions = async (walletAddress: string) => {
     try {
@@ -81,7 +84,9 @@ const TransactionsDialog: React.FC<TransactionsDialogProps> = ({
 
       const filteredTransactions = mappedTransactions.filter(
         (transaction): transaction is NonNullable<typeof transaction> =>
-          transaction !== null && transaction !== undefined,
+          transaction !== null &&
+          transaction !== undefined &&
+          transaction.value > 10 ** -5,
       );
 
       setTransactions(filteredTransactions);

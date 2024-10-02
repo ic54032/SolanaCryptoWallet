@@ -11,13 +11,24 @@ import {
   VersionedTransactionResponse,
 } from "@solana/web3.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Metadata } from "./Assets/AssetsDiv";
+import {
+  getOrCreateAssociatedTokenAccount,
+  createTransferInstruction,
+  TOKEN_2022_PROGRAM_ID,
+  getTokenMetadata,
+} from "@solana/spl-token";
 
-export const secretKey = Uint8Array.from(
-  Buffer.from(localStorage.getItem("secretKey") || "", "base64"),
-);
-export const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
+export const getSecretKey = () => {
+  const secretKey = Uint8Array.from(
+    Buffer.from(localStorage.getItem("secretKey") || "", "base64"),
+  );
+  return secretKey;
+};
 
 export const getBalance = async () => {
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   const connection = new Connection(clusterApiUrl("devnet"));
   const balance = (await connection.getBalance(publicKey)) / LAMPORTS_PER_SOL;
   console.log("Balance is: ", balance);
@@ -58,7 +69,8 @@ export const EXCHANGE_RATE = 133.88;
 
 export async function airdropSolana(amount: number) {
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   const status = await airdropIfRequired(
     connection,
     publicKey,
@@ -70,6 +82,8 @@ export async function airdropSolana(amount: number) {
 }
 
 export const sendSol = async (amount: number, recipient: string) => {
+  const secretKey = getSecretKey();
+  const publicKey = Keypair.fromSecretKey(secretKey).publicKey;
   if (!recipient) {
     throw new Error("Recipient address is required");
   }
@@ -187,6 +201,32 @@ export async function mapTransaction(
   let senderKeyString = senderKey.toBase58();
   let recipientKeyString = recipientKey.toBase58();
 
+  let value =
+    (transaction.meta.preBalances[0] - transaction.meta.postBalances[0]) / 1e9;
+  let token = "SOL";
+
+  if (
+    transaction.meta.postTokenBalances &&
+    transaction.meta.preTokenBalances &&
+    transaction.meta.postTokenBalances[0] &&
+    transaction.meta.preTokenBalances[0] &&
+    transaction.meta.postTokenBalances[0].uiTokenAmount.uiAmount &&
+    transaction.meta.preTokenBalances[0].uiTokenAmount.uiAmount &&
+    transaction.meta.postTokenBalances[1] &&
+    transaction.meta.postTokenBalances[1].owner
+  ) {
+    value =
+      transaction.meta.postTokenBalances[0].uiTokenAmount.uiAmount -
+      transaction.meta.preTokenBalances[0].uiTokenAmount.uiAmount;
+
+    const mint = new PublicKey(
+      transaction.meta.postTokenBalances[0].mint.toString(),
+    );
+    recipientKeyString = transaction.meta.postTokenBalances[1].owner.toString();
+    const metadata = await getTokenMetadata(connection, mint);
+    token = metadata!.symbol;
+  }
+
   const secretKeyString = localStorage.getItem("secretKey");
   if (!secretKeyString) {
     throw new Error("SECRET_KEY is not defined");
@@ -207,9 +247,63 @@ export async function mapTransaction(
     sender: senderKeyString,
     recipient: recipientKeyString,
     time: time ? new Date(time * 1000).toLocaleString() : "Unknown",
-    value:
-      (transaction.meta.preBalances[0] - transaction.meta.postBalances[0]) /
-      1e9,
-    token: "SOL",
+    value: Math.abs(value),
+    token: token,
   };
 }
+
+export const sendToken = async (
+  amount: number,
+  recipient: string,
+  token: Metadata,
+) => {
+  const secretKey = getSecretKey();
+  const ownerKeypair = Keypair.fromSecretKey(secretKey);
+  const mint = new PublicKey(token.mint);
+
+  if (!recipient) {
+    throw new Error("Recipient address is required");
+  }
+
+  const recieverPubkey = new PublicKey(recipient);
+
+  const connection = new Connection(
+    "https://api.devnet.solana.com",
+    "confirmed",
+  );
+
+  const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    ownerKeypair,
+    mint,
+    ownerKeypair.publicKey,
+    undefined,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+  );
+
+  const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    ownerKeypair,
+    mint,
+    recieverPubkey,
+    undefined,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+  );
+
+  const transaction = new Transaction().add(
+    createTransferInstruction(
+      fromTokenAccount.address,
+      toTokenAccount.address,
+      ownerKeypair.publicKey,
+      amount * LAMPORTS_PER_SOL,
+      undefined,
+      TOKEN_2022_PROGRAM_ID,
+    ),
+  );
+
+  await sendAndConfirmTransaction(connection, transaction, [ownerKeypair]);
+};

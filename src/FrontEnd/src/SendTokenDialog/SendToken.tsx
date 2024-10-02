@@ -3,27 +3,37 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { sendSol, getBalance } from "../cryptoUtils";
+import { getBalance, sendToken } from "../cryptoUtils";
 import { CheckCircleIcon, Loader } from "lucide-react";
-interface SendDialogProps {
+import { Metadata } from "../Assets/AssetsDiv";
+interface SendTokenDialogProps {
   open: boolean;
   handleClose: () => void;
+  metadata: Metadata | null;
 }
 
-const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
+const SendTokenDialog: React.FC<SendTokenDialogProps> = ({
+  open,
+  handleClose,
+  metadata,
+}) => {
   const [amount, setAmount] = useState<string>("0");
   const [recipient, setRecipient] = useState<string>("");
   const [balance, setBalance] = useState<number | null>(null);
   const [transactionSuccess, setTransactionSuccess] = useState<boolean>(false);
   const [transactionLoading, setTransactionLoading] = useState<boolean>(false);
+  const [token, setToken] = useState<Metadata>(
+    metadata ?? { name: "", symbol: "", amount: 0, mint: "" },
+  );
 
   useEffect(() => {
+    setToken(metadata ?? { name: "", symbol: "", amount: 0, mint: "" });
     const fetchBalance = async () => {
       const balance = await getBalance();
       setBalance(balance);
     };
     fetchBalance();
-  }, []);
+  }, [metadata]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -37,23 +47,36 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
     }
   };
 
-  const handleSend = async () => {
+  function handleSend() {
     try {
       setTransactionLoading(true);
-      await sendSol(parseFloat(amount), recipient);
-      setTransactionLoading(false);
-      setTransactionSuccess(true);
+      sendToken(parseFloat(amount), recipient, token).then(() => {
+        setTransactionLoading(false);
+        setTransactionSuccess(true);
+      });
     } catch (error) {
       console.error("Transaction failed: ", error);
       setTransactionSuccess(false);
       setTransactionLoading(false);
     }
-  };
+  }
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogContent className="sm:max-w-[425px] bg-gray-900 text-white p-6">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth={false}
+      fullWidth={true}
+      sx={{
+        "& .MuiDialog-paper": {
+          width: "30%",
+          display: "flex",
+          flexDirection: "column",
+        },
+      }}
+    >
+      <DialogContent className="w-full bg-gray-900 text-white p-6">
         <DialogTitle className="text-xl font-semibold mb-6">
-          Send SOL
+          Send {token.symbol}
         </DialogTitle>
 
         <div className="space-y-4">
@@ -67,9 +90,6 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
                 className="bg-transparent text-xl font-semibold focus:outline-none"
                 placeholder="0"
               />
-              <button className="bg-gray-700 text-sm px-3 py-1 rounded-full flex items-center">
-                <span className="mr-1">≋</span> SOL
-              </button>
             </div>
           </div>
 
@@ -86,6 +106,11 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
             </div>
           </div>
 
+          {token.amount < parseFloat(amount) && (
+            <div className="text-sm text-red-500 bg-red-900 bg-opacity-50 p-2 rounded">
+              Insufficient funds.
+            </div>
+          )}
           {(balance ?? 0) < 0.01 && (
             <div className="text-sm text-red-500 bg-red-900 bg-opacity-50 p-2 rounded">
               Insufficient SOL. Please ensure you have at least 0.01 SOL in your
@@ -100,7 +125,7 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded"
             disabled={parseFloat(amount) < 0.01}
           >
-            Send SOL
+            Send {token.symbol}
           </button>
         </DialogActions>
         {transactionSuccess && (
@@ -118,4 +143,4 @@ const SendDialog: React.FC<SendDialogProps> = ({ open, handleClose }) => {
   );
 };
 
-export default SendDialog;
+export default SendTokenDialog;

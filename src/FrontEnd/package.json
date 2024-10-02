@@ -27,26 +27,33 @@
     "lucide-react": "^0.445.0",
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
     "react-scripts": "5.0.1",
     "serve": "^14.2.3",
+    "stream-browserify": "^3.0.0",
     "ts-loader": "^9.5.1",
+    "vm-browserify": "^1.1.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "prod": "serve -s build",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
     ]
+  },
+  "browser": {
+    "crypto": "crypto-browserify",
+    "stream": "stream-browserify"
   },
   "browserslist": {
     "production": [
@@ -63,6 +70,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "prettier": "^3.3.3",
+    "react-app-rewired": "^2.2.1",
     "source-map-loader": "^5.0.0",
     "tailwindcss": "^3.4.12",
     "typescript": "^4.9.5",
