@@ -9,7 +9,6 @@ import API_URL from "../environment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { getSecretKey } from "../cryptoUtils";
-import TokenCreation from "../TokenCreation/TokenCreation";
 import { Keypair } from "@solana/web3.js";
 import SolanaTokenCreationForm from "../TokenCreation/TokenCreation";
 
@@ -153,7 +152,7 @@ const HomePage = () => {
           </button>
         </div>
       </div>
-      <div className="home-page bg-gray-900 text-yellow-500 min-h-screen px-20">
+      <div className="bg-gray-900 text-yellow-500 min-h-screen px-20">
         <div className="main-content p-6">
           <h3 className="text-xl mb-1">Balance</h3>
           <div className="balance-holder flex items-baseline">

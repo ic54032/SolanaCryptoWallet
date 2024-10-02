@@ -11,6 +11,12 @@ import {
   VersionedTransactionResponse,
 } from "@solana/web3.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Metadata } from "./Assets/AssetsDiv";
+import {
+  getOrCreateAssociatedTokenAccount,
+  createTransferInstruction,
+  TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 
 export const getSecretKey = () => {
   const secretKey = Uint8Array.from(
@@ -220,3 +226,59 @@ export async function mapTransaction(
     token: "SOL",
   };
 }
+
+export const sendToken = async (
+  amount: number,
+  recipient: string,
+  token: Metadata,
+) => {
+  const secretKey = getSecretKey();
+  const ownerKeypair = Keypair.fromSecretKey(secretKey);
+  const mint = new PublicKey(token.mint);
+
+  if (!recipient) {
+    throw new Error("Recipient address is required");
+  }
+
+  const recieverPubkey = new PublicKey(recipient);
+
+  const connection = new Connection(
+    "https://api.devnet.solana.com",
+    "confirmed",
+  );
+
+  const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    ownerKeypair,
+    mint,
+    ownerKeypair.publicKey,
+    undefined,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+  );
+
+  const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    ownerKeypair,
+    mint,
+    recieverPubkey,
+    undefined,
+    undefined,
+    undefined,
+    TOKEN_2022_PROGRAM_ID,
+  );
+
+  const transaction = new Transaction().add(
+    createTransferInstruction(
+      fromTokenAccount.address,
+      toTokenAccount.address,
+      ownerKeypair.publicKey,
+      amount * LAMPORTS_PER_SOL,
+      undefined,
+      TOKEN_2022_PROGRAM_ID,
+    ),
+  );
+
+  await sendAndConfirmTransaction(connection, transaction, [ownerKeypair]);
+};
