@@ -8,6 +8,7 @@ module.exports = function override(config, env) {
     buffer: require.resolve("buffer"),
     process: require.resolve("process/browser"),
     crypto: require.resolve("crypto-browserify"),
+    vm: require.resolve("vm-browserify"),
   };
   config.resolve.extensions = [...config.resolve.extensions, ".ts", ".js"];
   config.plugins = [
