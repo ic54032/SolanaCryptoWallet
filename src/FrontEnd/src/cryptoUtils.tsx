@@ -16,6 +16,7 @@ import {
   getOrCreateAssociatedTokenAccount,
   createTransferInstruction,
   TOKEN_2022_PROGRAM_ID,
+  getTokenMetadata,
 } from "@solana/spl-token";
 
 export const getSecretKey = () => {
@@ -200,6 +201,32 @@ export async function mapTransaction(
   let senderKeyString = senderKey.toBase58();
   let recipientKeyString = recipientKey.toBase58();
 
+  let value =
+    (transaction.meta.preBalances[0] - transaction.meta.postBalances[0]) / 1e9;
+  let token = "SOL";
+
+  if (
+    transaction.meta.postTokenBalances &&
+    transaction.meta.preTokenBalances &&
+    transaction.meta.postTokenBalances[0] &&
+    transaction.meta.preTokenBalances[0] &&
+    transaction.meta.postTokenBalances[0].uiTokenAmount.uiAmount &&
+    transaction.meta.preTokenBalances[0].uiTokenAmount.uiAmount &&
+    transaction.meta.postTokenBalances[1] &&
+    transaction.meta.postTokenBalances[1].owner
+  ) {
+    value =
+      transaction.meta.postTokenBalances[0].uiTokenAmount.uiAmount -
+      transaction.meta.preTokenBalances[0].uiTokenAmount.uiAmount;
+
+    const mint = new PublicKey(
+      transaction.meta.postTokenBalances[0].mint.toString(),
+    );
+    recipientKeyString = transaction.meta.postTokenBalances[1].owner.toString();
+    const metadata = await getTokenMetadata(connection, mint);
+    token = metadata!.symbol;
+  }
+
   const secretKeyString = localStorage.getItem("secretKey");
   if (!secretKeyString) {
     throw new Error("SECRET_KEY is not defined");
@@ -220,10 +247,8 @@ export async function mapTransaction(
     sender: senderKeyString,
     recipient: recipientKeyString,
     time: time ? new Date(time * 1000).toLocaleString() : "Unknown",
-    value:
-      (transaction.meta.preBalances[0] - transaction.meta.postBalances[0]) /
-      1e9,
-    token: "SOL",
+    value: Math.abs(value),
+    token: token,
   };
 }
 
